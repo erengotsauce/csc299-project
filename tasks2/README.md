@@ -28,6 +28,22 @@ python task_cli.py list
 python task_cli.py search keyword
 ```
 
+### Update a task's status
+
+```
+python task_cli.py update TASK_ID NEW_STATUS
+```
+
+Replace `TASK_ID` with the numeric ID of the task and `NEW_STATUS` with the desired status (e.g., `completed`, `pending`, etc.).
+
+### Delete a task
+
+```
+python task_cli.py delete TASK_ID
+```
+
+Replace `TASK_ID` with the numeric ID of the task you want to remove.
+
 ## Notes
 
 - All tasks are stored in `tasks.json` in the same directory.
