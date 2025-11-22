@@ -32,13 +32,14 @@ def add_task(
     tasks = load_json(TASKS_FILE)
     task = {
         "name": name,
-        "description": description
+        "description": description,
+        "status": "pending"
     }
     if location:
         task["location"] = location
     tasks.append(task)
     save_json(TASKS_FILE, tasks)
-    typer.echo(f"Task added: {name}\nDescription: {description}" + (f"\nLocation: {location}" if location else ""))
+    typer.echo(f"Task added: {name}\nDescription: {description}" + (f"\nLocation: {location}" if location else "") + "\nStatus: pending")
 
 @app.command()
 def list_tasks():
@@ -50,6 +51,7 @@ def list_tasks():
         typer.echo(f"{i}. {task['name']}\n   Description: {task.get('description', '')}")
         if 'location' in task:
             typer.echo(f"   Location: {task['location']}")
+        typer.echo(f"   Status: {task.get('status', 'pending')}")
 
 @app.command()
 def delete_task(index: int):
