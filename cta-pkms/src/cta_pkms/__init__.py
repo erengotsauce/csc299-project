@@ -21,12 +21,24 @@ def save_json(file_path, data):
         json.dump(data, f, indent=2)
 
 @app.command()
-def add_task(name: str):
-    "Add a new task."
+def add_task(
+    name: str = typer.Argument(..., help="Task name"),
+    description: str = typer.Argument(..., help="Task description"),
+    location: str = typer.Option(None, help="Task location (optional)")
+):
+    """
+    Add a new task with name, description, and optional location.
+    """
     tasks = load_json(TASKS_FILE)
-    tasks.append({"name": name})
+    task = {
+        "name": name,
+        "description": description
+    }
+    if location:
+        task["location"] = location
+    tasks.append(task)
     save_json(TASKS_FILE, tasks)
-    typer.echo(f"Task added: {name}")
+    typer.echo(f"Task added: {name}\nDescription: {description}" + (f"\nLocation: {location}" if location else ""))
 
 @app.command()
 def list_tasks():
@@ -35,7 +47,9 @@ def list_tasks():
     if not tasks:
         typer.echo("No tasks found.")
     for i, task in enumerate(tasks, 1):
-        typer.echo(f"{i}. {task['name']}")
+        typer.echo(f"{i}. {task['name']}\n   Description: {task.get('description', '')}")
+        if 'location' in task:
+            typer.echo(f"   Location: {task['location']}")
 
 @app.command()
 def delete_task(index: int):
