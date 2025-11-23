@@ -90,11 +90,30 @@ def list_tasks():
     tasks = load_json(TASKS_FILE)
     if not tasks:
         typer.echo("No tasks found.")
-    for i, task in enumerate(tasks, 1):
-        typer.echo(f"{i}. {task['name']}\n   Description: {task.get('description', '')}")
-        if 'location' in task:
-            typer.echo(f"   Location: {task['location']}")
-        typer.echo(f"   Status: {task.get('status', 'pending')}")
+        return
+    pending = [task for task in tasks if task.get('status', 'pending') == 'pending']
+    completed = [task for task in tasks if task.get('status', 'pending') == 'completed']
+
+    typer.echo("Pending Tasks:")
+    if not pending:
+        typer.echo("  None")
+    else:
+        for i, task in enumerate(pending, 1):
+            typer.echo(f"{i}. {task['name']}\n   Description: {task.get('description', '')}")
+            if 'location' in task:
+                typer.echo(f"   Location: {task['location']}")
+            typer.echo(f"   Status: {task.get('status', 'pending')}")
+
+    typer.echo("")
+    typer.echo("Completed Tasks:")
+    if not completed:
+        typer.echo("  None")
+    else:
+        for i, task in enumerate(completed, 1):
+            typer.echo(f"{i}. {task['name']}\n   Description: {task.get('description', '')}")
+            if 'location' in task:
+                typer.echo(f"   Location: {task['location']}")
+            typer.echo(f"   Status: {task.get('status', 'completed')}")
 
 @app.command()
 def delete_task(index: int):
