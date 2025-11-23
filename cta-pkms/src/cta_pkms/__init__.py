@@ -127,12 +127,23 @@ def delete_task(index: int):
         typer.echo("Invalid task number.")
 
 @app.command()
-def add_commute(name: str):
-    "Add a new commute."
+def add_commute(
+    name: str = typer.Argument(..., help="Commute name"),
+    departure_station: str = typer.Argument(..., help="Departure station"),
+    arrival_station: str = typer.Argument(..., help="Arrival station")
+):
+    """
+    Add a new commute with name, departure station, and arrival station.
+    """
     commutes = load_json(COMMUTES_FILE)
-    commutes.append({"name": name})
+    commute = {
+        "name": name,
+        "departure_station": departure_station,
+        "arrival_station": arrival_station
+    }
+    commutes.append(commute)
     save_json(COMMUTES_FILE, commutes)
-    typer.echo(f"Commute added: {name}")
+    typer.echo(f"Commute added: {name}\nDeparture: {departure_station}\nArrival: {arrival_station}")
 
 @app.command()
 def list_commutes():
@@ -140,8 +151,9 @@ def list_commutes():
     commutes = load_json(COMMUTES_FILE)
     if not commutes:
         typer.echo("No commutes found.")
+        return
     for i, commute in enumerate(commutes, 1):
-        typer.echo(f"{i}. {commute['name']}")
+        typer.echo(f"{i}. {commute['name']}\n   Departure: {commute.get('departure_station', '')}\n   Arrival: {commute.get('arrival_station', '')}")
 
 @app.command()
 def delete_commute(index: int):
