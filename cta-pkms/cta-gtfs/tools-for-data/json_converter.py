@@ -1,7 +1,7 @@
 import pandas as pd
 
-input_file = 'routes.txt'
-output_file = 'routes.jsonl'
+input_file = 'stops.txt'
+output_file = 'stops.jsonl'
 chunk_size = 100000  # Process 100k rows at a time
 
 print(f"Converting {input_file} to {output_file}...")
