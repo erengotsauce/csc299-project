@@ -1,6 +1,70 @@
 import typer
 import json
 from pathlib import Path
+import sys
+
+def run_station_selector():
+    from textual.app import App, ComposeResult
+    from textual.widgets import Header, Footer, ListView, ListItem, Label, Button
+    from pathlib import Path
+    import json
+
+    STOPS_FILE = Path("cta-gtfs/stops.jsonl")
+
+    def load_stops():
+        stops = []
+        if STOPS_FILE.exists():
+            with STOPS_FILE.open() as f:
+                for line in f:
+                    try:
+                        stop = json.loads(line)
+                        stops.append(stop)
+                    except Exception:
+                        continue
+        return stops
+
+    class StationSelector(App):
+        CSS_PATH = None
+
+        def __init__(self):
+            super().__init__()
+            self.stops = load_stops()
+            self.departure = None
+            self.arrival = None
+
+        def compose(self) -> ComposeResult:
+            yield Header()
+            yield Label("Select Departure Station:")
+            yield ListView(*[
+                ListItem(Label(f"{stop['stop_name']} ({stop['stop_id']})")) for stop in self.stops
+            ], id="departure_list")
+            yield Label("Select Arrival Station:")
+            yield ListView(*[
+                ListItem(Label(f"{stop['stop_name']} ({stop['stop_id']})")) for stop in self.stops
+            ], id="arrival_list")
+            yield Button("Confirm Selection", id="confirm_btn")
+            yield Footer()
+
+        def on_mount(self):
+            self.query_one("#departure_list").focus()
+
+        def on_list_view_selected(self, event):
+            list_id = event.list_view.id
+            idx = event.index
+            stop = self.stops[idx]
+            if list_id == "departure_list":
+                self.departure = stop
+            elif list_id == "arrival_list":
+                self.arrival = stop
+
+        def on_button_pressed(self, event):
+            if event.button.id == "confirm_btn":
+                if self.departure and self.arrival:
+                    self.exit((self.departure, self.arrival))
+                else:
+                    self.query_one("#departure_list").focus()
+
+    return StationSelector().run()
 
 app = typer.Typer()
 
@@ -128,22 +192,28 @@ def delete_task(index: int):
 
 @app.command()
 def add_commute(
-    name: str = typer.Argument(..., help="Commute name"),
-    departure_station: str = typer.Argument(..., help="Departure station"),
-    arrival_station: str = typer.Argument(..., help="Arrival station")
+    name: str = typer.Argument(..., help="Commute name")
 ):
     """
-    Add a new commute with name, departure station, and arrival station.
+    Add a new commute with name, and select departure/arrival stations via TUI.
     """
-    commutes = load_json(COMMUTES_FILE)
-    commute = {
-        "name": name,
-        "departure_station": departure_station,
-        "arrival_station": arrival_station
-    }
-    commutes.append(commute)
-    save_json(COMMUTES_FILE, commutes)
-    typer.echo(f"Commute added: {name}\nDeparture: {departure_station}\nArrival: {arrival_station}")
+    typer.echo("Launching station selector...")
+    result = run_station_selector()
+    if result and isinstance(result, tuple) and len(result) == 2:
+        departure, arrival = result
+        commutes = load_json(COMMUTES_FILE)
+        commute = {
+            "name": name,
+            "departure_station": departure["stop_name"],
+            "departure_stop_id": departure["stop_id"],
+            "arrival_station": arrival["stop_name"],
+            "arrival_stop_id": arrival["stop_id"]
+        }
+        commutes.append(commute)
+        save_json(COMMUTES_FILE, commutes)
+        typer.echo(f"Commute added: {name}\nDeparture: {departure['stop_name']} ({departure['stop_id']})\nArrival: {arrival['stop_name']} ({arrival['stop_id']})")
+    else:
+        typer.echo("Commute creation cancelled or failed.")
 
 @app.command()
 def list_commutes():
