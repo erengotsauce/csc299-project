@@ -18,7 +18,9 @@ def run_station_selector():
                 for line in f:
                     try:
                         stop = json.loads(line)
-                        stops.append(stop)
+                        stop_id = str(stop.get("stop_id", ""))
+                        if stop_id.startswith("4"):
+                            stops.append(stop)
                     except Exception:
                         continue
         return stops
