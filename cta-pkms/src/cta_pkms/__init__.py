@@ -42,6 +42,49 @@ def add_task(
     typer.echo(f"Task added: {name}\nDescription: {description}" + (f"\nLocation: {location}" if location else "") + "\nStatus: pending")
 
 @app.command()
+def amend_task(
+    index: int = typer.Argument(..., help="Task number to amend"),
+    name: str = typer.Option(None, help="New task name"),
+    description: str = typer.Option(None, help="New task description"),
+    location: str = typer.Option(None, help="New task location"),
+    status: str = typer.Option(None, help="New status: 'pending' or 'completed'")
+):
+    """
+    Amend a task's name, description, location, or status.
+    Status can only be 'pending' or 'completed'.
+    """
+    tasks = load_json(TASKS_FILE)
+    if 1 <= index <= len(tasks):
+        task = tasks[index - 1]
+        changed = False
+        if name is not None:
+            task["name"] = name
+            changed = True
+        if description is not None:
+            task["description"] = description
+            changed = True
+        if location is not None:
+            if location == "":
+                task.pop("location", None)
+            else:
+                task["location"] = location
+            changed = True
+        if status is not None:
+            if status in ["pending", "completed"]:
+                task["status"] = status
+                changed = True
+            else:
+                typer.echo("Status must be 'pending' or 'completed'.")
+                return
+        if changed:
+            save_json(TASKS_FILE, tasks)
+            typer.echo(f"Task {index} amended.")
+        else:
+            typer.echo("No changes provided.")
+    else:
+        typer.echo("Invalid task number.")
+
+@app.command()
 def list_tasks():
     "List all tasks."
     tasks = load_json(TASKS_FILE)
