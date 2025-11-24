@@ -7,7 +7,7 @@ import sys
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, ListView, ListItem, Label, Button
 
-CTA_TRAIN_TRACKER_API_KEY = os.getenv("CTA_API_KEY", "")
+CTA_TRAIN_TRACKER_API_KEY = os.getenv("CTA_TRAIN_TRACKER_API_KEY")
 
 def run_single_station_selector():
     """
@@ -47,9 +47,7 @@ def run_single_station_selector():
             self.stations = load_stations()
             self.lines = get_lines(self.stations)
             self.departure_line = None
-            self.arrival_line = None
             self.departure = None
-            self.arrival = None
             self.step = 'departure_line'
 
         def compose(self) -> ComposeResult:
@@ -64,9 +62,12 @@ def run_single_station_selector():
                 yield ListView(*[
                     ListItem(Label(f"{station['stop_name']}")) for station in self.lines[self.departure_line]
                 ], id="departure_station_list")
+            elif self.step == 'confirm':
+                yield Label(f"Departure: {self.departure['stop_name']}")
+                yield Button("Confirm Selection", id="confirm_btn")
             yield Footer()
 
-            def on_mount(self):
+        def on_mount(self):
                 self.refresh_focus()
             
         def refresh_focus(self):
@@ -74,6 +75,8 @@ def run_single_station_selector():
                 self.query_one("#departure_line_list").focus()
             elif self.step == 'departure_station':
                 self.query_one("#departure_station_list").focus()
+            elif self.step == 'confirm':
+                self.query_one("#confirm_btn").focus()
 
         def on_list_view_selected(self, event):
             list_id = event.list_view.id
@@ -84,12 +87,14 @@ def run_single_station_selector():
                 self.refresh_screen()
             elif self.step == 'departure_station' and list_id == "departure_station_list":
                 self.departure = self.lines[self.departure_line][idx]
+                self.step = 'confirm'
                 self.refresh_screen()
+            
 
         def on_button_pressed(self, event):
             if event.button.id == "confirm_btn":
-                if self.departure and self.arrival:
-                    self.exit((self.departure, self.arrival))
+                if self.departure:
+                    self.exit(self.departure)
                 else:
                     self.step = 'departure_line'
                     self.refresh_screen()
@@ -102,11 +107,11 @@ def run_single_station_selector():
 
 def fetch_next_arrivals(stop_id, api_key=CTA_TRAIN_TRACKER_API_KEY):
     """
-    Fetch next 3 arrivals for a given stop_id from CTA Train Tracker API.
+    Fetch next 5 arrivals for a given stop_id from CTA Train Tracker API.
     Returns a list of arrivals (dicts).
     """
     # Placeholder endpoint and params (see CTA docs for details)
-    url = f"http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx?key={api_key}&mapid={stop_id}&max=3&outputType=JSON"
+    url = f"http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx?key={api_key}&mapid={stop_id}&max=5&outputType=JSON"
     
     try:
         response = requests.get(url, timeout=10)
