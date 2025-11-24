@@ -6,8 +6,83 @@ from pathlib import Path
 import sys
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, ListView, ListItem, Label, Button
+from openai import OpenAI
 
 CTA_TRAIN_TRACKER_API_KEY = os.getenv("CTA_TRAIN_TRACKER_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+def fetch_cta_alerts():
+    """
+    Fetch CTA service alerts (Customer Alerts API).
+    Returns a list of alerts (dicts).
+    """
+    url = f"http://lapi.transitchicago.com/api/1.0/alerts.aspx?outputType=JSON"
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        return data.get("CTAAlerts", {}).get("Alert", [])
+    except Exception as e:
+        print(f"Error fetching alerts: {e}")
+        return []
+
+def call_openai_route_planner(departure, arrival, arrivals, alerts, api_key=OPENAI_API_KEY):
+    """
+    Call OpenAI Chat Completions API to plan best route and estimate time.
+    Returns dict with route and ETA.
+    """
+
+    client = OpenAI()
+    import requests
+    prompt = [
+        {"role": "user", "content":
+        f"You are a CTA commute planner. Given the following commute:\n"
+        f"Departure: {departure['stop_name']} ({departure['stop_id']})\n"
+        f"Arrival: {arrival['stop_name']} ({arrival['stop_id']})\n"
+        f"Live arrivals: {json.dumps(arrivals)}\n"
+        f"Service alerts: {json.dumps(alerts)}\n"
+        "Find the quickest CTA 'L' route from departure to arrival, considering live arrivals and alerts. "
+        "Feel free to use a different route if it is faster, even if it means terminating at a different station. Just make sure the it's not over 1 mile away from the original arrival station. "
+        "Only return the recommended route and estimated time in minutes."
+        "Format your response in this manner: [Briefly mention whether service alerts will affect commute, and how, if so] You will travel from [departure station] to [arrival station] via [line]. Estimated total commute time: [time] minutes. Your train will arrive at [departure time]. [mention transfers if applicable]"
+        "Do not include brackets in your response."
+        }
+    ]
+
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-4o",
+            messages=prompt
+    )
+    except Exception as e:
+        print(f"Error calling OpenAI: {e}")
+        return "Could not get route recommendation."
+    
+    return completion.choices[0].message.content
+
+def select_commute():
+    """
+    CLI to select a saved commute.
+    Returns (departure, arrival) station dicts.
+    """
+    commutes = load_json(COMMUTES_FILE)
+    if not commutes:
+        typer.echo("No commutes found.")
+        return None, None
+    typer.echo("Select a commute:")
+    for i, commute in enumerate(commutes, 1):
+        typer.echo(f"{i}. {commute['name']} | Departure: {commute.get('departure_station', '')} | Arrival: {commute.get('arrival_station', '')}")
+    idx = typer.prompt("Enter commute number", type=int)
+    if 1 <= idx <= len(commutes):
+        commute = commutes[idx - 1]
+        departure = {"stop_name": commute["departure_station"], "stop_id": commute["departure_stop_id"]}
+        arrival = {"stop_name": commute["arrival_station"], "stop_id": commute["arrival_stop_id"]}
+        return departure, arrival
+    else:
+        typer.echo("Invalid selection.")
+        return None, None
+
+
 
 def run_single_station_selector():
     """
@@ -439,6 +514,22 @@ def next_arrivals():
     for i, arr in enumerate(arrivals, 1):
         typer.echo(f"{i}. Route: {arr['route']} | Destination: {arr['destination']} | Arrival Time: {arr['arrival_time']}" +
                    (" | Delayed" if arr.get('is_delayed') == '1' else ""))
+        
+@app.command()
+def plan_commute():
+    """
+    Plan a commute using saved commutes, CTA APIs, and OpenAI.
+    """
+    departure, arrival = select_commute()
+    if not departure or not arrival:
+        return
+    typer.echo(f"Planning commute from {departure['stop_name']} to {arrival['stop_name']}...")
+    arrivals = fetch_next_arrivals(departure["stop_id"])
+    alerts = fetch_cta_alerts()
+    typer.echo("Calling AI for best route and ETA...")
+    result = call_openai_route_planner(departure, arrival, arrivals, alerts)
+    typer.echo("--- Commute Plan ---")
+    typer.echo(result)
 
 def main():
     app()
