@@ -4,68 +4,123 @@ from pathlib import Path
 import sys
 
 def run_station_selector():
+        
     from textual.app import App, ComposeResult
     from textual.widgets import Header, Footer, ListView, ListItem, Label, Button
     from pathlib import Path
     import json
 
-    STOPS_FILE = Path("cta-gtfs/stops.jsonl")
+    STATIONS_FILE = Path("cta-gtfs/route-stations.jsonl")
 
-    def load_stops():
-        stops = []
-        if STOPS_FILE.exists():
-            with STOPS_FILE.open() as f:
+    def get_lines(stops):
+            lines = {}
+            for stop in stops:
+                line = stop.get('route_id') or stop.get('line') or stop.get('line_id')
+                if line:
+                    if line not in lines:
+                        lines[line] = []
+                    lines[line].append(stop)
+            return lines
+
+    def load_stations():
+        stations = []
+        if STATIONS_FILE.exists():
+            with STATIONS_FILE.open() as f:
                 for line in f:
                     try:
-                        stop = json.loads(line)
-                        stop_id = str(stop.get("stop_id", ""))
-                        if stop_id.startswith("4"):
-                            stops.append(stop)
+                        station = json.loads(line)
+                        stations.append(station)
                     except Exception:
                         continue
-        return stops
+        return stations
 
     class StationSelector(App):
         CSS_PATH = None
 
         def __init__(self):
             super().__init__()
-            self.stops = load_stops()
+            self.stations = load_stations()
+            self.lines = get_lines(self.stations)
+            self.departure_line = None
+            self.arrival_line = None
             self.departure = None
             self.arrival = None
+            self.step = 'departure_line'
 
         def compose(self) -> ComposeResult:
             yield Header()
-            yield Label("Select Departure Station:")
-            yield ListView(*[
-                ListItem(Label(f"{stop['stop_name']} ({stop['stop_id']})")) for stop in self.stops
-            ], id="departure_list")
-            yield Label("Select Arrival Station:")
-            yield ListView(*[
-                ListItem(Label(f"{stop['stop_name']} ({stop['stop_id']})")) for stop in self.stops
-            ], id="arrival_list")
-            yield Button("Confirm Selection", id="confirm_btn")
+            if self.step == 'departure_line':
+                yield Label("Select Departure Line:")
+                yield ListView(*[
+                    ListItem(Label(str(line))) for line in self.lines.keys()
+                ], id="departure_line_list")
+            elif self.step == 'departure_station':
+                yield Label(f"Select Departure Station (Line: {self.departure_line}):")
+                yield ListView(*[
+                    ListItem(Label(f"{station['stop_name']}")) for station in self.lines[self.departure_line]
+                ], id="departure_station_list")
+            elif self.step == 'arrival_line':
+                yield Label("Select Arrival Line:")
+                yield ListView(*[
+                    ListItem(Label(str(line))) for line in self.lines.keys()
+                ], id="arrival_line_list")
+            elif self.step == 'arrival_station':
+                yield Label(f"Select Arrival Station (Line: {self.arrival_line}):")
+                yield ListView(*[
+                    ListItem(Label(f"{station['stop_name']}")) for station in self.lines[self.arrival_line]
+                ], id="arrival_station_list")
+            elif self.step == 'confirm':
+                yield Label(f"Departure: {self.departure['stop_name']}")
+                yield Label(f"Arrival: {self.arrival['stop_name']}")
+                yield Button("Confirm Selection", id="confirm_btn")
             yield Footer()
 
         def on_mount(self):
-            self.query_one("#departure_list").focus()
+            self.refresh_focus()
+        def refresh_focus(self):
+            if self.step == 'departure_line':
+                self.query_one("#departure_line_list").focus()
+            elif self.step == 'departure_station':
+                self.query_one("#departure_station_list").focus()
+            elif self.step == 'arrival_line':
+                self.query_one("#arrival_line_list").focus()
+            elif self.step == 'arrival_station':
+                self.query_one("#arrival_station_list").focus()
+            elif self.step == 'confirm':
+                self.query_one("#confirm_btn").focus()
 
         def on_list_view_selected(self, event):
             list_id = event.list_view.id
             idx = event.index
-            stop = self.stops[idx]
-            if list_id == "departure_list":
-                self.departure = stop
-            elif list_id == "arrival_list":
-                self.arrival = stop
+            if self.step == 'departure_line' and list_id == "departure_line_list":
+                self.departure_line = list(self.lines.keys())[idx]
+                self.step = 'departure_station'
+                self.refresh_screen()
+            elif self.step == 'departure_station' and list_id == "departure_station_list":
+                self.departure = self.lines[self.departure_line][idx]
+                self.step = 'arrival_line'
+                self.refresh_screen()
+            elif self.step == 'arrival_line' and list_id == "arrival_line_list":
+                self.arrival_line = list(self.lines.keys())[idx]
+                self.step = 'arrival_station'
+                self.refresh_screen()
+            elif self.step == 'arrival_station' and list_id == "arrival_station_list":
+                self.arrival = self.lines[self.arrival_line][idx]
+                self.step = 'confirm'
+                self.refresh_screen()
 
         def on_button_pressed(self, event):
             if event.button.id == "confirm_btn":
                 if self.departure and self.arrival:
                     self.exit((self.departure, self.arrival))
                 else:
-                    self.query_one("#departure_list").focus()
+                    self.step = 'departure_line'
+                    self.refresh_screen()
 
+        def refresh_screen(self):
+            for widget in self.compose():
+                self.mount(widget)
+            self.refresh_focus()
     return StationSelector().run()
 
 app = typer.Typer()
