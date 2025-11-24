@@ -1,0 +1,332 @@
+[
+  {
+    "station": "Howard",
+    "lines": ["Red Line", "Purple Line", "Yellow Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Jarvis",
+    "lines": ["Red Line"],
+    "ada_accessible": false
+  },
+  {
+    "station": "Morse",
+    "lines": ["Red Line"],
+    "ada_accessible": false
+  },
+  {
+    "station": "Loyola",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Granville",
+    "lines": ["Red Line"],
+    "ada_accessible": false
+  },
+  {
+    "station": "Thorndale",
+    "lines": ["Red Line"],
+    "ada_accessible": false
+  },
+  {
+    "station": "Bryn Mawr",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Berwyn",
+    "lines": ["Red Line"],
+    "ada_accessible": false
+  },
+  {
+    "station": "Argyle",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Lawrence",
+    "lines": ["Red Line"],
+    "ada_accessible": false
+  },
+  {
+    "station": "Wilson",
+    "lines": ["Red Line", "Purple Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Sheridan",
+    "lines": ["Red Line"],
+    "ada_accessible": false
+  },
+  {
+    "station": "Addison (Red Line)",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Belmont",
+    "lines": ["Red Line", "Brown Line", "Purple Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Fullerton",
+    "lines": ["Red Line", "Brown Line", "Purple Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "North/Clybourn",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Clark/Division",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Chicago (Red Line)",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Grand (Red Line)",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Lake (Red Line)",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Monroe (Red Line)",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Jackson (Red Line)",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Harrison",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Roosevelt",
+    "lines": ["Red Line", "Green Line", "Orange Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Cermak-Chinatown",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Sox-35th",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "47th (Red Line)",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Garfield (Red Line)",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "63rd (Red Line)",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "69th",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "79th",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "87th",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "95th/Dan Ryan",
+    "lines": ["Red Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "O'Hare",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Rosemont",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Cumberland",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Harlem (O'Hare Branch)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Jefferson Park",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Montrose",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Irving Park",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Addison (Blue Line)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Belmont (Blue Line)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Logan Square",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "California (Blue Line)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Western (O'Hare Branch)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Damen (Blue Line)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Division",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Chicago (Blue Line)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Grand (Blue Line)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Clark/Lake",
+    "lines": ["Blue Line", "Brown Line", "Green Line", "Orange Line", "Pink Line", "Purple Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Washington",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Monroe (Blue Line)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Jackson (Blue Line)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "LaSalle",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Clinton",
+    "lines": ["Blue Line", "Pink Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "UIC-Halsted",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Racine",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Illinois Medical District",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Western (Forest Park Branch)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Kedzie-Homan",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Pulaski (Blue Line)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Cicero (Blue Line)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Austin (Blue Line)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Oak Park (Blue Line)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Harlem (Forest Park Branch)",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  },
+  {
+    "station": "Forest Park",
+    "lines": ["Blue Line"],
+    "ada_accessible": true
+  }
+]
