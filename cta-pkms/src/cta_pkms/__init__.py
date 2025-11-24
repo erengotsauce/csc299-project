@@ -1,14 +1,134 @@
+import os
+import requests
 import typer
 import json
 from pathlib import Path
 import sys
+from textual.app import App, ComposeResult
+from textual.widgets import Header, Footer, ListView, ListItem, Label, Button
+
+CTA_TRAIN_TRACKER_API_KEY = os.getenv("CTA_API_KEY", "")
+
+def run_single_station_selector():
+    """
+    TUI to select a single station (by stop_name/stop_id).
+    Returns the selected station dict.
+    """
+
+    STATIONS_FILE = Path("cta-gtfs/route-stations.jsonl")
+
+    def get_lines(stops):
+            lines = {}
+            for stop in stops:
+                line = stop.get('route_id') or stop.get('line') or stop.get('line_id')
+                if line:
+                    if line not in lines:
+                        lines[line] = []
+                    lines[line].append(stop)
+            return lines
+
+    def load_stations():
+        stations = []
+        if STATIONS_FILE.exists():
+            with STATIONS_FILE.open() as f:
+                for line in f:
+                    try:
+                        station = json.loads(line)
+                        stations.append(station)
+                    except Exception:
+                        continue
+        return stations
+
+    class StationSelector(App):
+        CSS_PATH = None
+
+        def __init__(self):
+            super().__init__()
+            self.stations = load_stations()
+            self.lines = get_lines(self.stations)
+            self.departure_line = None
+            self.arrival_line = None
+            self.departure = None
+            self.arrival = None
+            self.step = 'departure_line'
+
+        def compose(self) -> ComposeResult:
+            yield Header()
+            if self.step == 'departure_line':
+                yield Label("Select Departure Line:")
+                yield ListView(*[
+                    ListItem(Label(str(line))) for line in self.lines.keys()
+                ], id="departure_line_list")
+            elif self.step == 'departure_station':
+                yield Label(f"Select Departure Station (Line: {self.departure_line}):")
+                yield ListView(*[
+                    ListItem(Label(f"{station['stop_name']}")) for station in self.lines[self.departure_line]
+                ], id="departure_station_list")
+            yield Footer()
+
+            def on_mount(self):
+                self.refresh_focus()
+            
+        def refresh_focus(self):
+            if self.step == 'departure_line':
+                self.query_one("#departure_line_list").focus()
+            elif self.step == 'departure_station':
+                self.query_one("#departure_station_list").focus()
+
+        def on_list_view_selected(self, event):
+            list_id = event.list_view.id
+            idx = event.index
+            if self.step == 'departure_line' and list_id == "departure_line_list":
+                self.departure_line = list(self.lines.keys())[idx]
+                self.step = 'departure_station'
+                self.refresh_screen()
+            elif self.step == 'departure_station' and list_id == "departure_station_list":
+                self.departure = self.lines[self.departure_line][idx]
+                self.refresh_screen()
+
+        def on_button_pressed(self, event):
+            if event.button.id == "confirm_btn":
+                if self.departure and self.arrival:
+                    self.exit((self.departure, self.arrival))
+                else:
+                    self.step = 'departure_line'
+                    self.refresh_screen()
+
+        def refresh_screen(self):
+            for widget in self.compose():
+                self.mount(widget)
+            self.refresh_focus()
+    return StationSelector().run()
+
+def fetch_next_arrivals(stop_id, api_key=CTA_TRAIN_TRACKER_API_KEY):
+    """
+    Fetch next 3 arrivals for a given stop_id from CTA Train Tracker API.
+    Returns a list of arrivals (dicts).
+    """
+    # Placeholder endpoint and params (see CTA docs for details)
+    url = f"http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx?key={api_key}&mapid={stop_id}&max=3&outputType=JSON"
+    
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        # Parse arrivals from API response (structure may vary)
+        arrivals = []
+        for eta in data.get("ctatt", {}).get("eta", []):
+            arrivals.append({
+                "route": eta.get("rt"),
+                "destination": eta.get("destNm"),
+                "arrival_time": eta.get("arrT"),
+                "is_scheduled": eta.get("isSch"),
+                "is_delayed": eta.get("isDly"),
+                "train_id": eta.get("trainId"),
+            })
+        return arrivals
+    except Exception as e:
+        print(f"Error fetching arrivals: {e}")
+        return []
 
 def run_station_selector():
-        
-    from textual.app import App, ComposeResult
-    from textual.widgets import Header, Footer, ListView, ListItem, Label, Button
-    from pathlib import Path
-    import json
 
     STATIONS_FILE = Path("cta-gtfs/route-stations.jsonl")
 
@@ -77,6 +197,7 @@ def run_station_selector():
 
         def on_mount(self):
             self.refresh_focus()
+
         def refresh_focus(self):
             if self.step == 'departure_line':
                 self.query_one("#departure_line_list").focus()
@@ -292,6 +413,27 @@ def delete_commute(index: int):
         typer.echo(f"Deleted commute: {removed['name']}")
     else:
         typer.echo("Invalid commute number.")
+
+@app.command()
+def next_arrivals():
+    """
+    Select a station via TUI and display next 3 train arrivals using CTA API.
+    """
+    typer.echo("Launching station selector...")
+    station = run_single_station_selector()
+    if not station or "stop_id" not in station:
+        typer.echo("No station selected or missing stop_id.")
+        return
+    stop_id = station["stop_id"]
+    typer.echo(f"Fetching next arrivals for {station['stop_name']} (stop_id: {stop_id})...")
+    arrivals = fetch_next_arrivals(stop_id)
+    if not arrivals:
+        typer.echo("No arrivals found or API error.")
+        return
+    typer.echo(f"Next 3 arrivals at {station['stop_name']}:")
+    for i, arr in enumerate(arrivals, 1):
+        typer.echo(f"{i}. Route: {arr['route']} | Destination: {arr['destination']} | Arrival Time: {arr['arrival_time']}" +
+                   (" | Delayed" if arr.get('is_delayed') == '1' else ""))
 
 def main():
     app()
