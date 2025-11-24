@@ -438,15 +438,29 @@ def list_tasks():
             typer.echo(f"   Status: {task.get('status', 'completed')}")
 
 @app.command()
-def delete_task(index: int):
-    "Delete a task by its number."
+@app.command()
+def delete_task(
+    index: int = typer.Argument(..., help="Task number to delete within the status group"),
+    status: str = typer.Option("pending", help="Task status: 'pending' or 'completed'")
+):
+    """
+    Delete a task by its number within the status group ('pending' or 'completed').
+    """
     tasks = load_json(TASKS_FILE)
-    if 1 <= index <= len(tasks):
-        removed = tasks.pop(index - 1)
+    if status not in ["pending", "completed"]:
+        typer.echo("Status must be 'pending' or 'completed'.")
+        return
+    filtered = [i for i, task in enumerate(tasks) if task.get('status', 'pending') == status]
+    if not filtered:
+        typer.echo(f"No {status} tasks found.")
+        return
+    if 1 <= index <= len(filtered):
+        real_idx = filtered[index - 1]
+        removed = tasks.pop(real_idx)
         save_json(TASKS_FILE, tasks)
-        typer.echo(f"Deleted task: {removed['name']}")
+        typer.echo(f"Deleted {status} task: {removed['name']}")
     else:
-        typer.echo("Invalid task number.")
+        typer.echo(f"Invalid {status} task number.")
 
 @app.command()
 def add_commute(
