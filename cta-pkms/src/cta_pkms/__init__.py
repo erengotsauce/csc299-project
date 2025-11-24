@@ -497,7 +497,7 @@ def delete_commute(index: int):
 @app.command()
 def next_arrivals():
     """
-    Select a station via TUI and display next 3 train arrivals using CTA API.
+    Select a station via TUI and display next 5 train arrivals using CTA API.
     """
     typer.echo("Launching station selector...")
     station = run_single_station_selector()
